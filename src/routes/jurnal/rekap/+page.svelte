@@ -7,6 +7,37 @@
 	let currentPage = $state(1);
 	let loading = $state(true);
 	let selected = $state<Journal | null>(null);
+	let recompiling = $state(false);
+	let editing = $state(false);
+	let editRaw = $state('');
+
+	async function recompileSelected() {
+		if (!selected) return;
+		recompiling = true;
+		try {
+			const updated = await api.journals.compile(selected.id);
+			selected = { ...updated, feedbacks: selected.feedbacks };
+			journals = journals.map(j => j.id === updated.id ? { ...j, title: updated.title, aiProcessed: true } : j);
+		} finally { recompiling = false; }
+	}
+
+	function startEdit() {
+		if (!selected) return;
+		editRaw = selected.activityRaw;
+		editing = true;
+	}
+
+	async function saveEdit() {
+		if (!selected) return;
+		recompiling = true;
+		try {
+			await api.journals.update(selected.id, { activityRaw: editRaw } as Partial<Journal>);
+			const updated = await api.journals.compile(selected.id);
+			selected = { ...updated, feedbacks: selected.feedbacks };
+			journals = journals.map(j => j.id === updated.id ? { ...j, title: updated.title, aiProcessed: true } : j);
+			editing = false;
+		} finally { recompiling = false; }
+	}
 
 	$effect(() => {
 		auth.init();
@@ -32,6 +63,7 @@
 	}
 
 	async function openDetail(id: string) {
+		editing = false;
 		selected = await api.journals.get(id);
 	}
 
@@ -99,7 +131,9 @@
 						<div class="flex-1 min-w-0">
 							<p class="text-sm font-semibold text-gray-900 truncate">{j.title}</p>
 							<div class="flex items-center gap-1.5 mt-1">
-								{#if j.aiProcessed}
+								{#if j.finalizedAt}
+									<span class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-medium">🔒 Terkunci</span>
+								{:else if j.aiProcessed}
 									<span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">AI</span>
 								{:else}
 									<span class="text-xs bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-medium">Draft</span>
@@ -185,7 +219,9 @@
 					<div class="flex-1 min-w-0">
 						<p class="text-sm font-semibold text-gray-900 truncate">{j.title}</p>
 						<div class="flex items-center gap-1.5 mt-1">
-							{#if j.aiProcessed}
+							{#if j.finalizedAt}
+								<span class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-medium">🔒 Terkunci</span>
+							{:else if j.aiProcessed}
 								<span class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">AI</span>
 							{:else}
 								<span class="text-xs bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full font-medium">Draft</span>
@@ -217,7 +253,57 @@
 			<p class="text-blue-200 text-xs mt-0.5">{formatLongDate(j.date)}</p>
 		</div>
 
+		<!-- Action bar -->
+		<div class="flex items-center gap-2 px-4 lg:px-6 py-3 border-b border-gray-100 bg-gray-50">
+			{#if j.finalizedAt}
+				<span class="flex items-center gap-1.5 text-xs font-semibold text-gray-400">
+					<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+					</svg>
+					Terkunci — sudah dikirim ke pembimbing
+				</span>
+			{:else if editing}
+				<button onclick={saveEdit} disabled={recompiling}
+					class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#1F4E79] text-white hover:bg-[#163d5e] disabled:opacity-60 transition-colors">
+					<svg class="w-3.5 h-3.5 {recompiling ? 'animate-spin' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+					</svg>
+					{recompiling ? 'Menyimpan & kompilasi...' : 'Simpan & Kompilasi Ulang'}
+				</button>
+				<button onclick={() => editing = false}
+					class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 transition-colors">
+					Batal
+				</button>
+			{:else}
+				<button onclick={startEdit}
+					class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 transition-colors">
+					<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+					</svg>
+					Perbaiki
+				</button>
+				{#if !j.aiProcessed}
+					<button onclick={recompileSelected} disabled={recompiling}
+						class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#1F4E79] text-white hover:bg-[#163d5e] disabled:opacity-60 transition-colors">
+						<svg class="w-3.5 h-3.5 {recompiling ? 'animate-spin' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+						</svg>
+						{recompiling ? 'Mengompilasi...' : 'Kompilasi AI'}
+					</button>
+				{/if}
+			{/if}
+		</div>
+
 		<div class="p-4 lg:p-6 space-y-3 text-sm text-gray-700">
+			{#if editing}
+				<div class="space-y-2">
+					<p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Cerita Asli — Ubah & Kompilasi Ulang</p>
+					<textarea bind:value={editRaw} rows={6}
+						class="w-full border border-[#1F4E79]/30 rounded-xl px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1F4E79]/30 resize-none bg-blue-50/30">
+					</textarea>
+				</div>
+				<hr class="border-gray-100"/>
+			{/if}
 			{#if j.activityCompiled}
 				<div class="bg-blue-50 rounded-xl p-3 lg:p-4">
 					<p class="text-xs font-bold text-[#1F4E79] uppercase tracking-wide mb-1.5">Uraian Kegiatan</p>

@@ -76,6 +76,12 @@ export const api = {
       request<Journal>(`/api/journals/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
     compile: (id: string) =>
       request<Journal>(`/api/journals/${id}/compile`, { method: 'POST' }),
+    finalize: (id: string) =>
+      request<Journal>(`/api/journals/${id}/finalize`, { method: 'POST' }),
+    delete: (id: string) =>
+      request<{ success: boolean }>(`/api/journals/${id}`, { method: 'DELETE' }),
+    getByDate: (date: string) =>
+      request<{ data: Journal[]; page: number }>(`/api/journals?page=1&limit=1`).then(r => r.data.find(j => j.date === date) ?? null),
   },
   placements: {
     my: () => request<Placement[]>('/api/placements/my'),
@@ -95,6 +101,8 @@ export type Journal = {
   photoUrl: string | null
   aiProcessed: boolean
   createdAt: string
+  updatedAt: string | null
+  finalizedAt: string | null
   feedbacks?: Feedback[]
 }
 
@@ -117,7 +125,7 @@ export type Placement = {
 
 export type CreateJournalBody = {
   date: string
-  title: string
+  title?: string
   activityRaw: string
   placementId?: string
   photoUrl?: string

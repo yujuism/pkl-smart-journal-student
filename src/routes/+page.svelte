@@ -24,6 +24,14 @@
 	let obError = $state('');
 	let showApprovalMessage = $state(false);
 
+	const SHOW_DEMO = import.meta.env.VITE_SHOW_DEMO === 'true';
+
+	const demoAccounts = [
+		{ label: 'Ahmad', nis: '2024001', badge: 'bg-blue-100 text-blue-700', desc: 'Siswa TKRO' },
+		{ label: 'Rizky', nis: '2024002', badge: 'bg-blue-100 text-blue-700', desc: 'Siswa TKRO' },
+		{ label: 'Fira', nis: '2024003', badge: 'bg-purple-100 text-purple-700', desc: 'Siswa TKJ' },
+	];
+
 	let gInitialized = false;
 
 	$effect(() => {
@@ -237,37 +245,39 @@
 {/if}
 
 <!-- Mobile -->
-<div class="lg:hidden min-h-screen bg-[#1F4E79] flex flex-col">
-	<div class="flex flex-col items-center pt-12 pb-8 px-6">
-		<div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg mb-4">
-			<svg class="w-9 h-9 text-[#1F4E79]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-			</svg>
-		</div>
-		<h1 class="text-3xl font-bold text-white tracking-wide">JURNAL PKL</h1>
-		<p class="text-blue-200 text-sm mt-1">SMK Negeri 1 Contoh</p>
-	</div>
-
-	<div class="flex-1 bg-white rounded-t-3xl px-6 pt-8 pb-10 shadow-2xl">
-		<h2 class="text-lg font-bold text-gray-800 mb-1">Masuk ke Akun</h2>
-		<p class="text-gray-400 text-sm mb-6">Gunakan NIS dan password Anda</p>
-
-		<!-- Google login button -->
-		<div id="g-btn-mobile" class="w-full mb-4 min-h-[44px]"></div>
-
-		<div class="flex items-center gap-3 mb-4">
-			<div class="flex-1 h-px bg-gray-200"></div>
-			<span class="text-xs text-gray-400 font-medium">atau</span>
-			<div class="flex-1 h-px bg-gray-200"></div>
+<div class="lg:hidden min-h-screen bg-[#1F4E79] flex flex-col items-center justify-start">
+	<div class="w-full max-w-md flex flex-col min-h-screen">
+		<div class="flex flex-col items-center pt-12 pb-8 px-6">
+			<div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg mb-4">
+				<svg class="w-9 h-9 text-[#1F4E79]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+				</svg>
+			</div>
+			<h1 class="text-3xl font-bold text-white tracking-wide">JURNAL PKL</h1>
+			<p class="text-blue-200 text-sm mt-1">SMK Negeri 1 Contoh</p>
 		</div>
 
-		{@render loginForm()}
+		<div class="flex-1 bg-white rounded-t-3xl px-6 pt-8 pb-10 shadow-2xl">
+			<h2 class="text-lg font-bold text-gray-800 mb-1">Masuk ke Akun</h2>
+			<p class="text-gray-400 text-sm mb-6">Gunakan NIS dan password Anda</p>
+
+			<!-- Google login button -->
+			<div id="g-btn-mobile" class="w-full mb-4 min-h-[44px]"></div>
+
+			<div class="flex items-center gap-3 mb-4">
+				<div class="flex-1 h-px bg-gray-200"></div>
+				<span class="text-xs text-gray-400 font-medium">atau</span>
+				<div class="flex-1 h-px bg-gray-200"></div>
+			</div>
+
+			{@render loginForm()}
+		</div>
 	</div>
 </div>
 
 <!-- Desktop -->
 <div class="hidden lg:flex min-h-screen">
-	<div class="w-1/2 bg-[#1F4E79] flex flex-col items-center justify-center p-16 relative overflow-hidden">
+	<div class="w-5/12 bg-[#1F4E79] flex flex-col items-center justify-center p-16 relative overflow-hidden">
 		<div class="absolute -top-20 -left-20 w-80 h-80 bg-white/5 rounded-full"></div>
 		<div class="absolute -bottom-32 -right-16 w-96 h-96 bg-white/5 rounded-full"></div>
 
@@ -299,7 +309,7 @@
 		</div>
 	</div>
 
-	<div class="w-1/2 bg-gray-50 flex items-center justify-center p-16">
+	<div class="flex-1 bg-gray-50 flex items-center justify-center p-12">
 		<div class="w-full max-w-md">
 			<div class="mb-8">
 				<h2 class="text-2xl font-bold text-gray-900 mb-1">Masuk ke Akun</h2>
@@ -320,6 +330,39 @@
 			<p class="text-center text-xs text-gray-400 mt-6">Butuh bantuan? Hubungi guru pembimbing Anda</p>
 		</div>
 	</div>
+
+	<!-- Demo accounts panel -->
+	{#if SHOW_DEMO}
+	<div class="w-72 bg-white border-l border-gray-200 p-6 flex flex-col justify-center">
+		<p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Demo Accounts</p>
+		<p class="text-xs text-gray-400 mb-4">Password: <code class="text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded font-mono">password123</code></p>
+
+		<div class="space-y-2 mb-6">
+			{#each demoAccounts as acc}
+				<button
+					type="button"
+					onclick={() => { nis = acc.nis; password = 'password123'; }}
+					class="w-full text-left bg-gray-50 hover:bg-[#1F4E79]/5 border border-gray-200 hover:border-[#1F4E79]/30 rounded-xl px-3 py-2.5 transition-colors group"
+				>
+					<div class="flex items-center justify-between mb-0.5">
+						<span class="text-xs font-bold text-gray-800">{acc.label}</span>
+						<span class="text-xs font-medium px-1.5 py-0.5 rounded {acc.badge}">{acc.desc}</span>
+					</div>
+					<p class="text-xs text-gray-400 font-mono group-hover:text-gray-600 transition-colors">NIS: {acc.nis}</p>
+				</button>
+			{/each}
+		</div>
+
+		<div class="pt-4 border-t border-gray-100">
+			<p class="text-xs text-gray-400 leading-relaxed mb-2">
+				<span class="font-semibold text-blue-600">Ahmad & Rizky</span> — PKL di Astra, dibimbing Pak Eko
+			</p>
+			<p class="text-xs text-gray-400 leading-relaxed">
+				<span class="font-semibold text-purple-600">Fira</span> — PKL di Yamaha, dibimbing Bu Sari
+			</p>
+		</div>
+	</div>
+	{/if}
 </div>
 
 <!-- Hidden fallback for Google button -->
